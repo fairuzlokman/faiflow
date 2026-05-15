@@ -1,7 +1,7 @@
 <script setup lang="ts">
-	import { useQuery } from '@tanstack/vue-query'
-	import { watchEffect } from 'vue'
-	import { nodesDataQuery, getNodes } from '@/api/node'
+	import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+	import { ref } from 'vue'
+	import { nodesDataQuery, getNodes, editNodes } from '@/api/node'
 	import {
 		Drawer,
 		DrawerClose,
@@ -13,33 +13,54 @@
 		DrawerTrigger,
 	} from '@/components/ui/drawer'
 	import { Button } from '@/components/ui/button'
+	import { useRoute, useRouter } from 'vue-router'
+	import { VueFlow, type Node } from '@vue-flow/core'
+	import { Background } from '@vue-flow/background'
 
-	const { data } = useQuery({
+	const route = useRoute()
+	const router = useRouter()
+
+	const queryClient = useQueryClient()
+
+	const { isPending, isError, data, error } = useQuery({
 		queryKey: nodesDataQuery,
 		queryFn: getNodes,
 	})
 
-	watchEffect(() => {
-		if (data.value) {
-			console.log('Nodes data response:', data.value)
-		}
+	const mutation = useMutation({
+		mutationFn: editNodes,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: nodesDataQuery })
+		},
 	})
+
+	const nodes = ref<Node[]>(data.value || [])
 </script>
 
 <template>
-	<Drawer direction="right">
-		<DrawerTrigger>Open</DrawerTrigger>
-		<DrawerContent>
-			<DrawerHeader>
-				<DrawerTitle>Are you absolutely sure?</DrawerTitle>
-				<DrawerDescription> This action cannot be undone. </DrawerDescription>
-			</DrawerHeader>
-			<DrawerFooter>
-				<Button>Submit</Button>
-				<DrawerClose>
-					<Button variant="outline"> Cancel </Button>
-				</DrawerClose>
-			</DrawerFooter>
-		</DrawerContent>
-	</Drawer>
+	<div class="h-dvh w-dvw">
+		<VueFlow :nodes="nodes">
+			<!-- The canvas for node visualization -->
+			<Background />
+
+			<!-- Drawer for node editing -->
+			<Drawer direction="right">
+				<DrawerTrigger>
+					<Button>Open</Button>
+				</DrawerTrigger>
+				<DrawerContent>
+					<DrawerHeader>
+						<DrawerTitle>Are you absolutely sure?</DrawerTitle>
+						<DrawerDescription> This action cannot be undone. </DrawerDescription>
+					</DrawerHeader>
+					<DrawerFooter>
+						<Button>Submit</Button>
+						<DrawerClose>
+							<Button variant="outline"> Cancel </Button>
+						</DrawerClose>
+					</DrawerFooter>
+				</DrawerContent>
+			</Drawer>
+		</VueFlow>
+	</div>
 </template>

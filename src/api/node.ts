@@ -16,3 +16,18 @@ export const getNodes = async (): Promise<FlowNode[]> => {
 	}
 	return response.json()
 }
+
+// Edit includes adding, updating, and deleting nodes
+export const editNodes = async (nodes: FlowNode[]): Promise<void> => {
+	await new Promise((resolve) => setTimeout(resolve, 400))
+	const response = await fetch('/data.json', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(nodes),
+	})
+	if (!response.ok) {
+		throw new Error(`Failed to edit nodes data: ${response.status}`)
+	}
+}
