@@ -8,8 +8,19 @@ import { VueQueryPlugin } from '@tanstack/vue-query'
 
 const app = createApp(App)
 
+const queryClientConfig = {
+	defaultOptions: {
+		queries: {
+			refetchOnWindowFocus: false,
+			networkMode: 'always' as const,
+			staleTime: Infinity,
+			gcTime: 60 * 60 * 1000,
+		},
+	},
+}
+
 app.use(createPinia())
 app.use(router)
-app.use(VueQueryPlugin)
+app.use(VueQueryPlugin, { queryClientConfig })
 
 app.mount('#app')

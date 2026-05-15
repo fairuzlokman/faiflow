@@ -1,7 +1,9 @@
 <script setup lang="ts">
+	import { watch } from 'vue'
+	import { storeToRefs } from 'pinia'
 	import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-	import { ref } from 'vue'
-	import { nodesDataQuery, getNodes, editNodes } from '@/api/node'
+	import { nodesDataQuery, getNodes, editNodes, type FlowNode } from '@/api/node'
+	import { useCanvasStore } from '@/stores/canvas'
 	import {
 		Drawer,
 		DrawerClose,
@@ -22,7 +24,12 @@
 
 	const queryClient = useQueryClient()
 
-	const { isPending, isError, data, error } = useQuery({
+	// Pinia holds the canvas state; TanStack Query owns the server fetch.
+	const canvasStore = useCanvasStore()
+	// storeToRefs keeps `nodes` reactive when destructured from the store.
+	const { nodes } = storeToRefs(canvasStore)
+
+	const { data } = useQuery({
 		queryKey: nodesDataQuery,
 		queryFn: getNodes,
 	})
@@ -34,12 +41,32 @@
 		},
 	})
 
-	const nodes = ref<Node[]>(data.value || [])
+	// VueFlow requires `position` on every node, and only renders its built-in
+	// types (default/input/output) unless we register custom ones — so for now
+	// every node is rendered as a plain "default" node stacked vertically.
+	function toFlowNodes(apiNodes: FlowNode[]): Node[] {
+		return apiNodes.map((n, i) => ({
+			id: String(n.id),
+			type: 'default',
+			position: { x: 0, y: i * 120 },
+			data: { label: n.name ?? n.type },
+		}))
+	}
+
+	// Seed the store once the query resolves. `immediate: true` runs the
+	// callback right away so cached data also flows in on mount.
+	watch(
+		data,
+		(apiNodes) => {
+			if (apiNodes) canvasStore.setNodes(toFlowNodes(apiNodes))
+		},
+		{ immediate: true },
+	)
 </script>
 
 <template>
 	<div class="h-dvh w-dvw">
-		<VueFlow :nodes="nodes">
+		<VueFlow v-model:nodes="nodes">
 			<!-- The canvas for node visualization -->
 			<Background />
 
