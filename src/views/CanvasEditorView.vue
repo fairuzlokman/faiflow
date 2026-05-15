@@ -1,4 +1,7 @@
 <script setup lang="ts">
+	import { useQuery } from '@tanstack/vue-query'
+	import { watchEffect } from 'vue'
+	import { nodesDataQuery, getNodes } from '@/api/node'
 	import {
 		Drawer,
 		DrawerClose,
@@ -10,6 +13,17 @@
 		DrawerTrigger,
 	} from '@/components/ui/drawer'
 	import { Button } from '@/components/ui/button'
+
+	const { data } = useQuery({
+		queryKey: nodesDataQuery,
+		queryFn: getNodes,
+	})
+
+	watchEffect(() => {
+		if (data.value) {
+			console.log('Nodes data response:', data.value)
+		}
+	})
 </script>
 
 <template>
