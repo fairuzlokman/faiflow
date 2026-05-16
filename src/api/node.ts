@@ -2,10 +2,16 @@ export const nodesDataQuery = ['nodes-data'] as const
 
 export type FlowNode = {
 	id: string | number
-	parentId?: string | number
+	parentId: string | number
 	type: string
 	name?: string
 	data?: Record<string, unknown>
+}
+
+export type FlowEdge = {
+	id: string | number
+	parentId: string | number
+	type: string
 }
 
 export const getNodes = async (): Promise<FlowNode[]> => {
