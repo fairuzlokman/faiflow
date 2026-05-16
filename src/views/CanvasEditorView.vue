@@ -21,16 +21,12 @@
 	import NodeDetailsDrawer from '@/components/drawer-content/NodeDetailsDrawer.vue'
 	import CanvasToolbar from '@/components/CanvasToolbar.vue'
 
-	// VueFlow expects each custom component wrapped in `markRaw` so it doesn't
-	// try to make the component reactive (a Vue performance pattern). VueFlow's
-	// strict NodeProps type is incompatible with our simpler component props
-	// without re-typing every field; casting once here keeps the call sites clean.
 	const nodeTypes = {
+		trigger: markRaw(TriggerNode),
+		dateTime: markRaw(BusinessHoursNode),
+		dateTimeConnector: markRaw(ConnectorNode),
 		sendMessage: markRaw(SendMessageNode),
 		addComment: markRaw(AddCommentNode),
-		dateTime: markRaw(BusinessHoursNode),
-		trigger: markRaw(TriggerNode),
-		dateTimeConnector: markRaw(ConnectorNode),
 	} as unknown as NodeTypesObject
 
 	const router = useRouter()
@@ -41,9 +37,6 @@
 		queryFn: getNodes,
 	})
 
-	// Seed the store once the query resolves. After hydration, edits flow
-	// through the store directly; we only re-hydrate when the query data
-	// itself changes (e.g. after a mutation invalidates the cache).
 	watch(
 		data,
 		(next) => {

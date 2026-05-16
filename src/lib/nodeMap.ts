@@ -1,6 +1,7 @@
 import type { Edge, Node } from '@vue-flow/core'
 import { Position } from '@vue-flow/core'
 import type { FlowNode } from '@/api/node'
+import type { LayoutPosition } from '@/api/layout'
 
 // Hand-rolled tree layout, top-down. Each row is one depth level; within a
 // row siblings spread horizontally. Subtree centring keeps a parent
@@ -75,10 +76,14 @@ export function toFlowNode(domain: FlowNode, position: XY): Node {
 	}
 }
 
-export function toFlowNodes(nodes: FlowNode[]): Node[] {
+export function toFlowNodes(
+	nodes: FlowNode[],
+	persistedPositions: Record<string, LayoutPosition> = {},
+): Node[] {
 	const layout = layoutTree(nodes)
 	return nodes.map((node) => {
-		const position = node.position ?? layout.get(node.id) ?? { x: 0, y: 0 }
+		const position =
+			persistedPositions[node.id] ?? node.position ?? layout.get(node.id) ?? { x: 0, y: 0 }
 		return toFlowNode(node, position)
 	})
 }

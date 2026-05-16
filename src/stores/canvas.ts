@@ -3,32 +3,50 @@ import { defineStore } from 'pinia'
 import type { Edge, Node } from '@vue-flow/core'
 import type { FlowNode } from '@/api/node'
 import { toFlowEdges, toFlowNodes } from '@/lib/nodeMap'
-
-// The canvas store keeps two views of the same data in sync:
-//   1. `domainNodes` — the canonical FlowNode records (Map keyed by id),
-//      which is what we persist and what editors read from.
-//   2. `flowNodes` / `flowEdges` — the VueFlow-shaped values bound directly
-//      to `<VueFlow v-model:nodes>`. VueFlow mutates these on drag/select.
-//
-// Keeping both lets editor components stay typed against the domain shape
-// while VueFlow still gets the live array it needs.
+import type { LayoutPosition } from '@/api/layout'
+import { readLayout, writeLayout } from '@/lib/storage'
 
 export const useCanvasStore = defineStore('canvas', () => {
+	// ---------------------------------------------------------------------
+	// State
+	// ---------------------------------------------------------------------
 	const domainNodes = ref<Map<string, FlowNode>>(new Map())
 	const flowNodes = ref<Node[]>([])
 	const flowEdges = ref<Edge[]>([])
+	// User-customised positions, keyed by node id. Lives in localStorage so
+	// drag positions survive a refresh even when the nodes themselves are
+	// re-fetched from /data.json (which doesn't carry layout).
+	const positions = ref<Record<string, LayoutPosition>>(readLayout())
 
+	// ---------------------------------------------------------------------
+	// Getters
+	// ---------------------------------------------------------------------
 	const allDomainNodes = computed<FlowNode[]>(() => Array.from(domainNodes.value.values()))
+
+	// ---------------------------------------------------------------------
+	// Internal helpers
+	// ---------------------------------------------------------------------
+	function syncFlowFromDomain() {
+		flowNodes.value = toFlowNodes(allDomainNodes.value, positions.value)
+		flowEdges.value = toFlowEdges(allDomainNodes.value)
+	}
+
+	function persistPositions() {
+		writeLayout(positions.value)
+	}
 
 	// ---------------------------------------------------------------------
 	// Hydration
 	// ---------------------------------------------------------------------
 	function hydrate(nodes: FlowNode[]) {
 		domainNodes.value = new Map(nodes.map((n) => [n.id, n]))
-		flowNodes.value = toFlowNodes(nodes)
-		flowEdges.value = toFlowEdges(nodes)
+		positions.value = readLayout()
+		syncFlowFromDomain()
 	}
 
+	// ---------------------------------------------------------------------
+	// Read actions
+	// ---------------------------------------------------------------------
 	function getNode(id: string): FlowNode | undefined {
 		return domainNodes.value.get(id)
 	}
@@ -36,14 +54,13 @@ export const useCanvasStore = defineStore('canvas', () => {
 	// ---------------------------------------------------------------------
 	// Mutations
 	// ---------------------------------------------------------------------
-	// Each mutation updates the domain Map and then re-derives only what
-	// changed in the VueFlow array — we avoid rebuilding the whole list so
-	// VueFlow keeps its internal state (selection, dragging) intact.
-
 	function addNode(node: FlowNode) {
 		domainNodes.value.set(node.id, node)
-		flowNodes.value = toFlowNodes(allDomainNodes.value)
-		flowEdges.value = toFlowEdges(allDomainNodes.value)
+		if (node.position) {
+			positions.value = { ...positions.value, [node.id]: node.position }
+			persistPositions()
+		}
+		syncFlowFromDomain()
 	}
 
 	function updateNode(id: string, patch: Partial<FlowNode>) {
@@ -52,9 +69,6 @@ export const useCanvasStore = defineStore('canvas', () => {
 		const next: FlowNode = { ...current, ...patch }
 		domainNodes.value.set(id, next)
 
-		// VueFlow watches `flowNodes` for shape changes; mutating `data` in
-		// place keeps node positions and selection state untouched. A for-of
-		// loop avoids inferring VueFlow's deep generic callback type.
 		for (const node of flowNodes.value) {
 			if (node.id === id) {
 				node.data = { ...node.data, title: next.title ?? '' }
@@ -87,6 +101,13 @@ export const useCanvasStore = defineStore('canvas', () => {
 			}
 		}
 		flowEdges.value = toFlowEdges(allDomainNodes.value)
+
+		if (removed.length > 0) {
+			const next = { ...positions.value }
+			for (const removedId of removed) delete next[removedId]
+			positions.value = next
+			persistPositions()
+		}
 		return removed
 	}
 
@@ -107,19 +128,30 @@ export const useCanvasStore = defineStore('canvas', () => {
 		const current = domainNodes.value.get(id)
 		if (!current) return
 		domainNodes.value.set(id, { ...current, position })
+		positions.value = { ...positions.value, [id]: position }
+		persistPositions()
 		// flowNodes already has the new position (VueFlow mutated it on drag).
 	}
 
+	// ---------------------------------------------------------------------
+	// Reset
+	// ---------------------------------------------------------------------
 	function $reset() {
 		domainNodes.value = new Map()
 		flowNodes.value = []
 		flowEdges.value = []
+		positions.value = {}
+		persistPositions()
 	}
 
+	// ---------------------------------------------------------------------
+	// Public surface
+	// ---------------------------------------------------------------------
 	return {
 		// state
 		flowNodes,
 		flowEdges,
+		positions,
 		// getters
 		allDomainNodes,
 		getNode,

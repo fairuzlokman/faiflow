@@ -11,7 +11,6 @@ import {
 	DialogTrigger,
 } from 'reka-ui'
 import { Plus, X } from 'lucide-vue-next'
-
 import { Button } from '@/components/ui/button'
 import { CREATABLE_NODE_TYPES } from '@/lib/nodeTypes'
 import { useNodeMutation } from '@/composables/useNodeMutation'
