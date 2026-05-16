@@ -23,7 +23,14 @@ export default defineConfigWithVueTs(
 
   {
     ...pluginVitest.configs.recommended,
-    files: ['src/**/__tests__/*'],
+    files: ['src/**/__tests__/**'],
+  },
+
+  // shadcn-vue components keep single-word names by convention (Button,
+  // Drawer); we don't want the multi-word rule complaining about them.
+  {
+    files: ['src/components/ui/**/*.vue'],
+    rules: { 'vue/multi-word-component-names': 'off' },
   },
 
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
