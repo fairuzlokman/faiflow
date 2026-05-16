@@ -90,6 +90,19 @@ export const useCanvasStore = defineStore('canvas', () => {
 		return removed
 	}
 
+	// Wire an existing node as the parent of a currently-unattached node.
+	// Edges live in the domain as `parentId`, so we update the target and let
+	// `toFlowEdges` re-derive — same path hydration uses.
+	function connectNodes(sourceId: string, targetId: string) {
+		if (sourceId === targetId) return
+		const source = domainNodes.value.get(sourceId)
+		const target = domainNodes.value.get(targetId)
+		if (!source || !target) return
+		if (target.parentId !== -1) return
+		domainNodes.value.set(targetId, { ...target, parentId: sourceId })
+		flowEdges.value = toFlowEdges(allDomainNodes.value)
+	}
+
 	function setNodePosition(id: string, position: { x: number; y: number }) {
 		const current = domainNodes.value.get(id)
 		if (!current) return
@@ -115,6 +128,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 		addNode,
 		updateNode,
 		deleteNode,
+		connectNodes,
 		setNodePosition,
 		$reset,
 	}
