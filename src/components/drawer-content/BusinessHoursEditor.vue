@@ -6,8 +6,9 @@
 	import { useNodeMutation } from '@/composables/useNodeMutation'
 	import { validateTime } from '@/lib/validation'
 	import type { BusinessHourSlot, DayKey } from '@/api/node'
+	import { Save } from 'lucide-vue-next'
 
-	const props = defineProps<{ nodeId: string }>()
+	const props = defineProps<{ nodeId: string; saveMetaData: () => void }>()
 
 	const store = useCanvasStore()
 	const { updateNode } = useNodeMutation()
@@ -86,6 +87,7 @@
 				...(stored.value.action ? { action: stored.value.action } : {}),
 			},
 		})
+		props.saveMetaData()
 	}
 </script>
 
@@ -141,8 +143,6 @@
 
 		<p v-if="draft.error" class="text-xs text-destructive">{{ draft.error }}</p>
 
-		<Button size="sm" class="w-full" @click="handleSaveBusinessHours"
-			>Save business hours</Button
-		>
+		<Button class="w-full" @click="handleSaveBusinessHours"> <Save />Save changes </Button>
 	</div>
 </template>

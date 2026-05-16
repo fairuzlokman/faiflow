@@ -55,7 +55,7 @@
 	const meta = computed(() => (selected.value ? getNodeMeta(selected.value.type) : null))
 	const typeLabel = computed(() => meta.value?.label ?? '')
 
-	const handleSaveChanges = () => {
+	const handleSaveMetaData = () => {
 		if (!selected.value) return
 
 		const titleResult = validateTitle(titleInput.value)
@@ -135,18 +135,18 @@
 					</section>
 
 					<section v-if="selected.type === 'sendMessage'" class="border-t pt-4">
-						<SendMessageEditor :node-id="selected.id" />
+						<SendMessageEditor :node-id="selected.id" :save-meta-data="handleSaveMetaData" />
 					</section>
 					<section v-else-if="selected.type === 'addComment'" class="border-t pt-4">
-						<AddCommentEditor :node-id="selected.id" />
+						<AddCommentEditor :node-id="selected.id" :save-meta-data="handleSaveMetaData" />
 					</section>
 					<section v-else-if="selected.type === 'dateTime'" class="border-t pt-4">
-						<BusinessHoursEditor :node-id="selected.id" />
+						<BusinessHoursEditor :node-id="selected.id" :save-meta-data="handleSaveMetaData" />
 					</section>
 				</div>
 
-				<DrawerFooter class="border-t">
-					<Button class="w-full" @click="handleSaveChanges">Save changes</Button>
+				<DrawerFooter>
+					<!-- <Button class="w-full" @click="handleSaveChanges">Save changes</Button> -->
 					<div class="flex gap-2">
 						<DrawerClose as-child>
 							<Button variant="outline" class="flex-1">Cancel</Button>

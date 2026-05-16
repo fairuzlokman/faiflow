@@ -1,74 +1,71 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { Image, Plus, Trash2, Upload } from 'lucide-vue-next'
+	import { computed, ref } from 'vue'
+	import { Image, Plus, Trash2, Upload } from 'lucide-vue-next'
 
-import { Button } from '@/components/ui/button'
-import { useCanvasStore } from '@/stores/canvas'
-import { useNodeMutation } from '@/composables/useNodeMutation'
-import type { MessagePayload } from '@/api/node'
+	import { Button } from '@/components/ui/button'
+	import { useCanvasStore } from '@/stores/canvas'
+	import { useNodeMutation } from '@/composables/useNodeMutation'
+	import type { MessagePayload } from '@/api/node'
 
-const props = defineProps<{ nodeId: string }>()
+	const props = defineProps<{ nodeId: string, saveMetaData: () => void }>()
 
-const store = useCanvasStore()
-const { updateNode } = useNodeMutation()
+	const store = useCanvasStore()
+	const { updateNode } = useNodeMutation()
 
-const node = computed(() => store.getNode(props.nodeId))
-const payload = computed<MessagePayload[]>(() => {
-	const data = node.value?.data as { payload?: MessagePayload[] } | undefined
-	return data?.payload ?? []
-})
+	const node = computed(() => store.getNode(props.nodeId))
+	const payload = computed<MessagePayload[]>(() => {
+		const data = node.value?.data as { payload?: MessagePayload[] } | undefined
+		return data?.payload ?? []
+	})
 
-const newText = ref('')
-const fileInput = ref<HTMLInputElement | null>(null)
+	const newText = ref('')
+	const fileInput = ref<HTMLInputElement | null>(null)
 
-const persistPayload = (next: MessagePayload[]) => {
-	updateNode(props.nodeId, { data: { payload: next } })
-}
-
-const updateText = (index: number, value: string) => {
-	const next = payload.value.map((item, i) =>
-		i === index && item.type === 'text' ? { ...item, text: value } : item,
-	)
-	persistPayload(next)
-}
-
-const removeItem = (index: number) => {
-	persistPayload(payload.value.filter((_, i) => i !== index))
-}
-
-const addText = () => {
-	const trimmed = newText.value.trim()
-	if (!trimmed) return
-	persistPayload([...payload.value, { type: 'text', text: trimmed }])
-	newText.value = ''
-}
-
-// Upload reads each file as a data URL — purely client-side, no backend
-// required. Larger files will bloat localStorage; for an assessment that's
-// an acceptable tradeoff and the README notes it.
-const onFileChange = (event: Event) => {
-	const input = event.target as HTMLInputElement
-	const files = input.files
-	if (!files || files.length === 0) return
-
-	const readers: Promise<MessagePayload>[] = []
-	for (const file of files) {
-		readers.push(
-			new Promise((resolve, reject) => {
-				const reader = new FileReader()
-				reader.onload = () =>
-					resolve({ type: 'attachment', attachment: String(reader.result) })
-				reader.onerror = () => reject(reader.error)
-				reader.readAsDataURL(file)
-			}),
-		)
+	const persistPayload = (next: MessagePayload[]) => {
+		updateNode(props.nodeId, { data: { payload: next } })
 	}
-	Promise.all(readers)
-		.then((added) => persistPayload([...payload.value, ...added]))
-		.finally(() => {
-			input.value = ''
-		})
-}
+
+	const updateText = (index: number, value: string) => {
+		const next = payload.value.map((item, i) =>
+			i === index && item.type === 'text' ? { ...item, text: value } : item,
+		)
+		persistPayload(next)
+	}
+
+	const removeItem = (index: number) => {
+		persistPayload(payload.value.filter((_, i) => i !== index))
+	}
+
+	const addText = () => {
+		const trimmed = newText.value.trim()
+		if (!trimmed) return
+		persistPayload([...payload.value, { type: 'text', text: trimmed }])
+		newText.value = ''
+	}
+
+	const onFileChange = (event: Event) => {
+		const input = event.target as HTMLInputElement
+		const files = input.files
+		if (!files || files.length === 0) return
+
+		const readers: Promise<MessagePayload>[] = []
+		for (const file of files) {
+			readers.push(
+				new Promise((resolve, reject) => {
+					const reader = new FileReader()
+					reader.onload = () =>
+						resolve({ type: 'attachment', attachment: String(reader.result) })
+					reader.onerror = () => reject(reader.error)
+					reader.readAsDataURL(file)
+				}),
+			)
+		}
+		Promise.all(readers)
+			.then((added) => persistPayload([...payload.value, ...added]))
+			.finally(() => {
+				input.value = ''
+			})
+	}
 </script>
 
 <template>
@@ -93,7 +90,7 @@ const onFileChange = (event: Event) => {
 					/>
 				</template>
 				<template v-else>
-					<div class="flex flex-1 items-center gap-2">
+					<div class="flex flex-1 items-center gap-2 truncate">
 						<img
 							:src="item.attachment"
 							alt="attachment preview"

@@ -5,8 +5,9 @@
 	import { useCanvasStore } from '@/stores/canvas'
 	import { useNodeMutation } from '@/composables/useNodeMutation'
 	import { validateComment } from '@/lib/validation'
+	import { Save } from 'lucide-vue-next'
 
-	const props = defineProps<{ nodeId: string }>()
+	const props = defineProps<{ nodeId: string; saveMetaData: () => void }>()
 
 	const store = useCanvasStore()
 	const { updateNode } = useNodeMutation()
@@ -20,8 +21,6 @@
 	const draft = ref(initial.value)
 	const error = ref<string | null>(null)
 
-	// If the user switches to a different addComment node while the drawer is
-	// open, seed the textarea with that node's comment.
 	watch(initial, (value) => {
 		draft.value = value
 		error.value = null
@@ -35,12 +34,7 @@
 		}
 		error.value = null
 		updateNode(props.nodeId, { data: { comment: draft.value.trim() } })
-	}
-
-	const handleRemoveComment = () => {
-		draft.value = ''
-		error.value = null
-		updateNode(props.nodeId, { data: { comment: '' } })
+		props.saveMetaData()
 	}
 </script>
 
@@ -58,11 +52,6 @@
 			@input="error = null"
 		/>
 		<p v-if="error" class="text-xs text-destructive">{{ error }}</p>
-		<div class="flex gap-2">
-			<Button size="sm" class="flex-1" @click="handleSaveComment">Save comment</Button>
-			<Button variant="outline" size="sm" class="flex-1" @click="handleRemoveComment"
-				>Remove</Button
-			>
-		</div>
+		<Button class="w-full" @click="handleSaveComment"> <Save />Save changes </Button>
 	</div>
 </template>
