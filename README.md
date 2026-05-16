@@ -31,7 +31,7 @@ The dev server runs at http://localhost:5173 (or the next free port). Other usef
 | Server state       | TanStack Query (`@tanstack/vue-query`)                         |
 | Canvas             | Vue Flow (`@vue-flow/core`, `@vue-flow/background`)            |
 | Styling            | Tailwind CSS v4 + a small shadcn-vue button/drawer set         |
-| Icons              | lucide-vue-next                                                |
+| Icons              | Lucide icons		                                              |
 | Tests              | Vitest + @vue/test-utils                                       |
 
 ## Features
