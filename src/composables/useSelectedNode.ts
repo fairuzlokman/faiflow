@@ -6,7 +6,7 @@ import { useCanvasStore } from '@/stores/canvas'
 // We read from the URL so links can deep-link to any node and the back
 // button just works. If the id in the URL doesn't match any node (e.g.
 // after deletion) we return null and let the drawer stay closed.
-export function useSelectedNode() {
+export const useSelectedNode = () => {
 	const route = useRoute()
 	const router = useRouter()
 	const store = useCanvasStore()
@@ -24,11 +24,11 @@ export function useSelectedNode() {
 
 	const isOpen = computed(() => selected.value !== null)
 
-	function close() {
+	const close = () => {
 		router.push({ name: 'canvas' })
 	}
 
-	function open(id: string) {
+	const open = (id: string) => {
 		router.push({ name: 'node', params: { id } })
 	}
 

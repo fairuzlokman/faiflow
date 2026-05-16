@@ -13,7 +13,7 @@ export const ROW_HEIGHT = 180
 
 type XY = { x: number; y: number }
 
-function buildChildIndex(nodes: FlowNode[]): Map<string, FlowNode[]> {
+const buildChildIndex = (nodes: FlowNode[]): Map<string, FlowNode[]> => {
 	const byParent = new Map<string, FlowNode[]>()
 	for (const node of nodes) {
 		const parentKey = String(node.parentId)
@@ -24,7 +24,7 @@ function buildChildIndex(nodes: FlowNode[]): Map<string, FlowNode[]> {
 	return byParent
 }
 
-function findRoots(nodes: FlowNode[]): FlowNode[] {
+const findRoots = (nodes: FlowNode[]): FlowNode[] => {
 	const idSet = new Set(nodes.map((n) => n.id))
 	return nodes.filter((n) => !idSet.has(String(n.parentId)))
 }
@@ -34,7 +34,7 @@ function findRoots(nodes: FlowNode[]): FlowNode[] {
  * in-order position of each leaf. Internal nodes are centred over their
  * children. Returns a Map keyed by node id.
  */
-export function layoutTree(nodes: FlowNode[]): Map<string, XY> {
+export const layoutTree = (nodes: FlowNode[]): Map<string, XY> => {
 	const positions = new Map<string, XY>()
 	const childIndex = buildChildIndex(nodes)
 	let nextLeafColumn = 0
@@ -67,7 +67,7 @@ export function layoutTree(nodes: FlowNode[]): Map<string, XY> {
  * components read the original domain record from the store via id — we only
  * stuff `title` here so VueFlow's selection state has something readable.
  */
-export function toFlowNode(domain: FlowNode, position: XY): Node {
+export const toFlowNode = (domain: FlowNode, position: XY): Node => {
 	return {
 		id: domain.id,
 		type: domain.type,
@@ -76,10 +76,10 @@ export function toFlowNode(domain: FlowNode, position: XY): Node {
 	}
 }
 
-export function toFlowNodes(
+export const toFlowNodes = (
 	nodes: FlowNode[],
 	persistedPositions: Record<string, LayoutPosition> = {},
-): Node[] {
+): Node[] => {
 	const layout = layoutTree(nodes)
 	return nodes.map((node) => {
 		const position =
@@ -93,7 +93,7 @@ export function toFlowNodes(
  * set handle positions so connections always exit the bottom of the parent
  * and enter the top of the child, matching the top-down layout above.
  */
-export function toFlowEdges(nodes: FlowNode[]): Edge[] {
+export const toFlowEdges = (nodes: FlowNode[]): Edge[] => {
 	const idSet = new Set(nodes.map((n) => n.id))
 	return nodes
 		.filter((n) => n.parentId !== -1 && idSet.has(String(n.parentId)))

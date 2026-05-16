@@ -21,22 +21,22 @@ const payload = computed<MessagePayload[]>(() => {
 const newText = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 
-function persistPayload(next: MessagePayload[]) {
+const persistPayload = (next: MessagePayload[]) => {
 	updateNode(props.nodeId, { data: { payload: next } })
 }
 
-function updateText(index: number, value: string) {
+const updateText = (index: number, value: string) => {
 	const next = payload.value.map((item, i) =>
 		i === index && item.type === 'text' ? { ...item, text: value } : item,
 	)
 	persistPayload(next)
 }
 
-function removeItem(index: number) {
+const removeItem = (index: number) => {
 	persistPayload(payload.value.filter((_, i) => i !== index))
 }
 
-function addText() {
+const addText = () => {
 	const trimmed = newText.value.trim()
 	if (!trimmed) return
 	persistPayload([...payload.value, { type: 'text', text: trimmed }])
@@ -46,7 +46,7 @@ function addText() {
 // Upload reads each file as a data URL — purely client-side, no backend
 // required. Larger files will bloat localStorage; for an assessment that's
 // an acceptable tradeoff and the README notes it.
-function onFileChange(event: Event) {
+const onFileChange = (event: Event) => {
 	const input = event.target as HTMLInputElement
 	const files = input.files
 	if (!files || files.length === 0) return

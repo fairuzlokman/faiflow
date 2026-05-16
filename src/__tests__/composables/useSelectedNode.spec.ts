@@ -11,7 +11,7 @@ import { useCanvasStore } from '@/stores/canvas'
 // useRouter require an active router instance and inject context. Memory
 // history keeps the test hermetic (no jsdom URL manipulation needed).
 
-function makeHarness() {
+const makeHarness = () => {
 	return defineComponent({
 		setup() {
 			return useSelectedNode()
@@ -20,7 +20,7 @@ function makeHarness() {
 	})
 }
 
-function makeRouter() {
+const makeRouter = () => {
 	return createRouter({
 		history: createMemoryHistory(),
 		routes: [

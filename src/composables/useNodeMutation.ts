@@ -6,7 +6,7 @@ import { useCanvasStore } from '@/stores/canvas'
 // caller doesn't reinvent it. The mutation invalidates the nodes-data
 // query so any other consumer (e.g. devtools) sees fresh data, but the
 // store already has the new state synchronously — the user doesn't wait.
-export function useNodeMutation() {
+export const useNodeMutation = () => {
 	const store = useCanvasStore()
 	const queryClient = useQueryClient()
 
@@ -17,21 +17,21 @@ export function useNodeMutation() {
 		},
 	})
 
-	function persist() {
+	const persist = () => {
 		mutation.mutate(store.allDomainNodes)
 	}
 
-	function createNode(node: FlowNode) {
+	const createNode = (node: FlowNode) => {
 		store.addNode(node)
 		persist()
 	}
 
-	function updateNode(id: string, patch: Partial<FlowNode>) {
+	const updateNode = (id: string, patch: Partial<FlowNode>) => {
 		store.updateNode(id, patch)
 		persist()
 	}
 
-	function deleteNode(id: string): string[] {
+	const deleteNode = (id: string) => {
 		const removed = store.deleteNode(id)
 		persist()
 		return removed

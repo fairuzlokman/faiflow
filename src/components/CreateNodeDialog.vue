@@ -1,98 +1,98 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
-import {
-	DialogClose,
-	DialogContent,
-	DialogDescription,
-	DialogOverlay,
-	DialogPortal,
-	DialogRoot,
-	DialogTitle,
-	DialogTrigger,
-} from 'reka-ui'
-import { Plus, X } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { CREATABLE_NODE_TYPES } from '@/lib/nodeTypes'
-import { useNodeMutation } from '@/composables/useNodeMutation'
-import { useCanvasStore } from '@/stores/canvas'
-import { newNodeId } from '@/lib/ids'
-import { validateDescription, validateTitle } from '@/lib/validation'
-import { ROW_HEIGHT } from '@/lib/nodeMap'
-import type { NodeType, NodeData } from '@/api/node'
+	import { reactive, ref, watch } from 'vue'
+	import {
+		DialogClose,
+		DialogContent,
+		DialogDescription,
+		DialogOverlay,
+		DialogPortal,
+		DialogRoot,
+		DialogTitle,
+		DialogTrigger,
+	} from 'reka-ui'
+	import { Plus, X } from 'lucide-vue-next'
+	import { Button } from '@/components/ui/button'
+	import { CREATABLE_NODE_TYPES } from '@/lib/nodeTypes'
+	import { useNodeMutation } from '@/composables/useNodeMutation'
+	import { useCanvasStore } from '@/stores/canvas'
+	import { newNodeId } from '@/lib/ids'
+	import { validateDescription, validateTitle } from '@/lib/validation'
+	import { ROW_HEIGHT } from '@/lib/nodeMap'
+	import type { NodeType, NodeData } from '@/api/node'
 
-const open = ref(false)
-const store = useCanvasStore()
-const { createNode } = useNodeMutation()
+	const open = ref(false)
+	const store = useCanvasStore()
+	const { createNode } = useNodeMutation()
 
-type FormState = {
-	title: string
-	description: string
-	type: NodeType
-	titleError: string | null
-	descriptionError: string | null
-}
-
-function emptyForm(): FormState {
-	return {
-		title: '',
-		description: '',
-		type: CREATABLE_NODE_TYPES[0]?.type ?? 'sendMessage',
-		titleError: null,
-		descriptionError: null,
+	type FormState = {
+		title: string
+		description: string
+		type: NodeType
+		titleError: string | null
+		descriptionError: string | null
 	}
-}
 
-const form = reactive<FormState>(emptyForm())
-
-watch(open, (next) => {
-	if (next) Object.assign(form, emptyForm())
-})
-
-// Default data for newly created nodes. Each type expects a particular
-// shape — keeping the seed here means editors don't need to handle
-// "missing data" cases.
-function defaultDataFor(type: NodeType): NodeData {
-	switch (type) {
-		case 'sendMessage':
-			return { payload: [] }
-		case 'addComment':
-			return { comment: '' }
-		case 'dateTime':
-			return { times: [], timezone: 'UTC' }
-		default:
-			return {}
+	const emptyForm = (): FormState => {
+		return {
+			title: '',
+			description: '',
+			type: CREATABLE_NODE_TYPES[0]?.type ?? 'sendMessage',
+			titleError: null,
+			descriptionError: null,
+		}
 	}
-}
 
-// Park new nodes one row below the lowest existing node so they don't
-// overlap. Horizontal position resets to the left edge of the canvas.
-function nextPosition(): { x: number; y: number } {
-	let maxY = 0
-	for (const node of store.allDomainNodes) {
-		const y = node.position?.y ?? 0
-		if (y > maxY) maxY = y
-	}
-	return { x: 0, y: maxY + ROW_HEIGHT }
-}
+	const form = reactive<FormState>(emptyForm())
 
-function submit() {
-	const titleResult = validateTitle(form.title)
-	const descResult = validateDescription(form.description)
-	form.titleError = titleResult.ok ? null : titleResult.message
-	form.descriptionError = descResult.ok ? null : descResult.message
-	if (!titleResult.ok || !descResult.ok) return
-
-	createNode({
-		id: newNodeId(),
-		parentId: -1, // unattached; user can wire later via a future connection feature
-		type: form.type,
-		title: form.title.trim(),
-		description: form.description.trim(),
-		data: defaultDataFor(form.type),
-		position: nextPosition(),
+	watch(open, (next) => {
+		if (next) Object.assign(form, emptyForm())
 	})
-	open.value = false
-}
+
+	// Default data for newly created nodes. Each type expects a particular
+	// shape — keeping the seed here means editors don't need to handle
+	// "missing data" cases.
+	const defaultDataFor = (type: NodeType): NodeData => {
+		switch (type) {
+			case 'sendMessage':
+				return { payload: [] }
+			case 'addComment':
+				return { comment: '' }
+			case 'dateTime':
+				return { times: [], timezone: 'UTC' }
+			default:
+				return {}
+		}
+	}
+
+	// Park new nodes one row below the lowest existing node so they don't
+	// overlap. Horizontal position resets to the left edge of the canvas.
+	const nextPosition = (): { x: number; y: number } => {
+		let maxY = 0
+		for (const node of store.allDomainNodes) {
+			const y = node.position?.y ?? 0
+			if (y > maxY) maxY = y
+		}
+		return { x: 0, y: maxY + ROW_HEIGHT }
+	}
+
+	const submit = () => {
+		const titleResult = validateTitle(form.title)
+		const descResult = validateDescription(form.description)
+		form.titleError = titleResult.ok ? null : titleResult.message
+		form.descriptionError = descResult.ok ? null : descResult.message
+		if (!titleResult.ok || !descResult.ok) return
+
+		createNode({
+			id: newNodeId(),
+			parentId: -1, // unattached; user can wire later via a future connection feature
+			type: form.type,
+			title: form.title.trim(),
+			description: form.description.trim(),
+			data: defaultDataFor(form.type),
+			position: nextPosition(),
+		})
+		open.value = false
+	}
 </script>
 
 <template>
@@ -163,7 +163,11 @@ function submit() {
 							v-model="form.type"
 							class="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
 						>
-							<option v-for="entry in CREATABLE_NODE_TYPES" :key="entry.type" :value="entry.type">
+							<option
+								v-for="entry in CREATABLE_NODE_TYPES"
+								:key="entry.type"
+								:value="entry.type"
+							>
 								{{ entry.label }}
 							</option>
 						</select>

@@ -28,15 +28,10 @@ export const writeNodes = (nodes: FlowNode[]): void => {
 	}
 }
 
-export const updateNodeParent = (
-	nodeId: string,
-	parentId: string | number,
-): void => {
+export const updateNodeParent = (nodeId: string, parentId: string | number): void => {
 	const nodes = readNodes()
 	if (!nodes) return
-	const next = nodes.map((node) =>
-		node.id === nodeId ? { ...node, parentId } : node,
-	)
+	const next = nodes.map((node) => (node.id === nodeId ? { ...node, parentId } : node))
 	writeNodes(next)
 }
 
@@ -63,4 +58,10 @@ export const writeLayout = (layout: Record<string, LayoutPosition>): void => {
 	} catch (error) {
 		console.error('Failed to serialize layout for storage:', error)
 	}
+}
+
+// Reset canvas
+export const resetCanvas = (): void => {
+	localStorage.removeItem(NODES_STORAGE_KEY)
+	localStorage.removeItem(LAYOUT_STORAGE_KEY)
 }

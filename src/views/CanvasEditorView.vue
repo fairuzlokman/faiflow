@@ -47,17 +47,17 @@
 
 	// Editable nodes route to /node/:id, which opens the drawer. Connector and
 	// trigger nodes are display-only per the spec.
-	function handleNodeClick({ node }: NodeMouseEvent) {
+	const handleNodeClick = ({ node }: NodeMouseEvent) => {
 		if (node.type === 'dateTimeConnector' || node.type === 'trigger') return
 		router.push({ name: 'node', params: { id: node.id } })
 	}
 
 	// Persist the new position into the domain record so it survives a refresh.
-	function handleNodeDragStop({ node }: NodeDragEvent) {
+	const handleNodeDragStop = ({ node }: NodeDragEvent) => {
 		store.setNodePosition(node.id, node.position)
 	}
 
-	function handleConnect({ source, target }: Connection) {
+	const handleConnect = ({ source, target }: Connection) => {
 		store.connectNodes(source, target)
 	}
 </script>

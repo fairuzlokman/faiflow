@@ -33,6 +33,6 @@ export const CREATABLE_NODE_TYPES = (Object.entries(NODE_TYPE_META) as [NodeType
 	.filter(([, meta]) => meta.creatable)
 	.map(([type, meta]) => ({ type, ...meta }))
 
-export function getNodeMeta(type: NodeType): NodeTypeMeta {
+export const getNodeMeta = (type: NodeType): NodeTypeMeta => {
 	return NODE_TYPE_META[type]
 }

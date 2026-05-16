@@ -1,47 +1,47 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+	import { computed, ref, watch } from 'vue'
 
-import { Button } from '@/components/ui/button'
-import { useCanvasStore } from '@/stores/canvas'
-import { useNodeMutation } from '@/composables/useNodeMutation'
-import { validateComment } from '@/lib/validation'
+	import { Button } from '@/components/ui/button'
+	import { useCanvasStore } from '@/stores/canvas'
+	import { useNodeMutation } from '@/composables/useNodeMutation'
+	import { validateComment } from '@/lib/validation'
 
-const props = defineProps<{ nodeId: string }>()
+	const props = defineProps<{ nodeId: string }>()
 
-const store = useCanvasStore()
-const { updateNode } = useNodeMutation()
+	const store = useCanvasStore()
+	const { updateNode } = useNodeMutation()
 
-const node = computed(() => store.getNode(props.nodeId))
-const initial = computed(() => {
-	const data = node.value?.data as { comment?: string } | undefined
-	return data?.comment ?? ''
-})
+	const node = computed(() => store.getNode(props.nodeId))
+	const initial = computed(() => {
+		const data = node.value?.data as { comment?: string } | undefined
+		return data?.comment ?? ''
+	})
 
-const draft = ref(initial.value)
-const error = ref<string | null>(null)
+	const draft = ref(initial.value)
+	const error = ref<string | null>(null)
 
-// If the user switches to a different addComment node while the drawer is
-// open, seed the textarea with that node's comment.
-watch(initial, (value) => {
-	draft.value = value
-	error.value = null
-})
+	// If the user switches to a different addComment node while the drawer is
+	// open, seed the textarea with that node's comment.
+	watch(initial, (value) => {
+		draft.value = value
+		error.value = null
+	})
 
-function save() {
-	const result = validateComment(draft.value)
-	if (!result.ok) {
-		error.value = result.message
-		return
+	const handleSaveComment = () => {
+		const result = validateComment(draft.value)
+		if (!result.ok) {
+			error.value = result.message
+			return
+		}
+		error.value = null
+		updateNode(props.nodeId, { data: { comment: draft.value.trim() } })
 	}
-	error.value = null
-	updateNode(props.nodeId, { data: { comment: draft.value.trim() } })
-}
 
-function clear() {
-	draft.value = ''
-	error.value = null
-	updateNode(props.nodeId, { data: { comment: '' } })
-}
+	const handleRemoveComment = () => {
+		draft.value = ''
+		error.value = null
+		updateNode(props.nodeId, { data: { comment: '' } })
+	}
 </script>
 
 <template>
@@ -59,8 +59,10 @@ function clear() {
 		/>
 		<p v-if="error" class="text-xs text-destructive">{{ error }}</p>
 		<div class="flex gap-2">
-			<Button size="sm" class="flex-1" @click="save">Save comment</Button>
-			<Button variant="outline" size="sm" class="flex-1" @click="clear">Remove</Button>
+			<Button size="sm" class="flex-1" @click="handleSaveComment">Save comment</Button>
+			<Button variant="outline" size="sm" class="flex-1" @click="handleRemoveComment"
+				>Remove</Button
+			>
 		</div>
 	</div>
 </template>

@@ -26,19 +26,19 @@ export const useCanvasStore = defineStore('canvas', () => {
 	// ---------------------------------------------------------------------
 	// Internal helpers
 	// ---------------------------------------------------------------------
-	function syncFlowFromDomain() {
+	const syncFlowFromDomain = () => {
 		flowNodes.value = toFlowNodes(allDomainNodes.value, positions.value)
 		flowEdges.value = toFlowEdges(allDomainNodes.value)
 	}
 
-	function persistPositions() {
+	const persistPositions = () => {
 		writeLayout(positions.value)
 	}
 
 	// ---------------------------------------------------------------------
 	// Hydration
 	// ---------------------------------------------------------------------
-	function hydrate(nodes: FlowNode[]) {
+	const hydrate = (nodes: FlowNode[]) => {
 		domainNodes.value = new Map(nodes.map((n) => [n.id, n]))
 		positions.value = readLayout()
 		if (!readNodes()) writeNodes(nodes)
@@ -48,14 +48,14 @@ export const useCanvasStore = defineStore('canvas', () => {
 	// ---------------------------------------------------------------------
 	// Read actions
 	// ---------------------------------------------------------------------
-	function getNode(id: string): FlowNode | undefined {
+	const getNode = (id: string): FlowNode | undefined => {
 		return domainNodes.value.get(id)
 	}
 
 	// ---------------------------------------------------------------------
 	// Mutations
 	// ---------------------------------------------------------------------
-	function addNode(node: FlowNode) {
+	const addNode = (node: FlowNode) => {
 		domainNodes.value.set(node.id, node)
 		if (node.position) {
 			positions.value = { ...positions.value, [node.id]: node.position }
@@ -64,7 +64,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 		syncFlowFromDomain()
 	}
 
-	function updateNode(id: string, patch: Partial<FlowNode>) {
+	const updateNode = (id: string, patch: Partial<FlowNode>) => {
 		const current = domainNodes.value.get(id)
 		if (!current) return
 		const next: FlowNode = { ...current, ...patch }
@@ -80,7 +80,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 
 	// Delete a node and every descendant (cascade). Returning the affected
 	// ids lets the caller log/show feedback if needed.
-	function deleteNode(id: string): string[] {
+	const deleteNode = (id: string): string[] => {
 		const removed: string[] = []
 		const queue: string[] = [id]
 		while (queue.length > 0) {
@@ -115,7 +115,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 	// Wire an existing node as the parent of a currently-unattached node.
 	// Edges live in the domain as `parentId`, so we update the target and let
 	// `toFlowEdges` re-derive — same path hydration uses.
-	function connectNodes(sourceId: string, targetId: string) {
+	const connectNodes = (sourceId: string, targetId: string) => {
 		if (sourceId === targetId) return
 		const source = domainNodes.value.get(sourceId)
 		const target = domainNodes.value.get(targetId)
@@ -126,7 +126,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 		updateNodeParent(targetId, sourceId)
 	}
 
-	function setNodePosition(id: string, position: { x: number; y: number }) {
+	const setNodePosition = (id: string, position: { x: number; y: number }) => {
 		const current = domainNodes.value.get(id)
 		if (!current) return
 		domainNodes.value.set(id, { ...current, position })
@@ -138,7 +138,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 	// ---------------------------------------------------------------------
 	// Reset
 	// ---------------------------------------------------------------------
-	function $reset() {
+	const $reset = () => {
 		domainNodes.value = new Map()
 		flowNodes.value = []
 		flowEdges.value = []
