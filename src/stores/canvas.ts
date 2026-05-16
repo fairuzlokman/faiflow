@@ -4,7 +4,7 @@ import type { Edge, Node } from '@vue-flow/core'
 import type { FlowNode } from '@/api/node'
 import { toFlowEdges, toFlowNodes } from '@/lib/nodeMap'
 import type { LayoutPosition } from '@/api/layout'
-import { readLayout, writeLayout } from '@/lib/storage'
+import { readLayout, readNodes, updateNodeParent, writeLayout, writeNodes } from '@/lib/storage'
 
 export const useCanvasStore = defineStore('canvas', () => {
 	// ---------------------------------------------------------------------
@@ -41,6 +41,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 	function hydrate(nodes: FlowNode[]) {
 		domainNodes.value = new Map(nodes.map((n) => [n.id, n]))
 		positions.value = readLayout()
+		if (!readNodes()) writeNodes(nodes)
 		syncFlowFromDomain()
 	}
 
@@ -122,6 +123,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 		if (target.parentId !== -1) return
 		domainNodes.value.set(targetId, { ...target, parentId: sourceId })
 		flowEdges.value = toFlowEdges(allDomainNodes.value)
+		updateNodeParent(targetId, sourceId)
 	}
 
 	function setNodePosition(id: string, position: { x: number; y: number }) {

@@ -28,6 +28,18 @@ export const writeNodes = (nodes: FlowNode[]): void => {
 	}
 }
 
+export const updateNodeParent = (
+	nodeId: string,
+	parentId: string | number,
+): void => {
+	const nodes = readNodes()
+	if (!nodes) return
+	const next = nodes.map((node) =>
+		node.id === nodeId ? { ...node, parentId } : node,
+	)
+	writeNodes(next)
+}
+
 // ---------------------------------------------------------------------
 // Layout persistence
 // ---------------------------------------------------------------------
