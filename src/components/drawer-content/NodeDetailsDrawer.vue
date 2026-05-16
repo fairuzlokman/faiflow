@@ -31,6 +31,7 @@
 	import SendMessageEditor from './SendMessageEditor.vue'
 	import AddCommentEditor from './AddCommentEditor.vue'
 	import BusinessHoursEditor from './BusinessHoursEditor.vue'
+	import { toast } from 'vue-sonner'
 
 	const { selected, isOpen, close } = useSelectedNode()
 	const { updateNode, deleteNode } = useNodeMutation()
@@ -75,6 +76,8 @@
 		if (!selected.value) return
 		deleteNode(selected.value.id)
 		close()
+
+		toast.success('Node deleted successfully')
 	}
 
 	const handleOpenChange = (open: boolean) => {
@@ -135,13 +138,22 @@
 					</section>
 
 					<section v-if="selected.type === 'sendMessage'" class="border-t pt-4">
-						<SendMessageEditor :node-id="selected.id" :save-meta-data="handleSaveMetaData" />
+						<SendMessageEditor
+							:node-id="selected.id"
+							:save-meta-data="handleSaveMetaData"
+						/>
 					</section>
 					<section v-else-if="selected.type === 'addComment'" class="border-t pt-4">
-						<AddCommentEditor :node-id="selected.id" :save-meta-data="handleSaveMetaData" />
+						<AddCommentEditor
+							:node-id="selected.id"
+							:save-meta-data="handleSaveMetaData"
+						/>
 					</section>
 					<section v-else-if="selected.type === 'dateTime'" class="border-t pt-4">
-						<BusinessHoursEditor :node-id="selected.id" :save-meta-data="handleSaveMetaData" />
+						<BusinessHoursEditor
+							:node-id="selected.id"
+							:save-meta-data="handleSaveMetaData"
+						/>
 					</section>
 				</div>
 
@@ -159,24 +171,24 @@
 										Delete node
 									</Button>
 								</AlertDialogTrigger>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>Delete this node?</AlertDialogTitle>
-									<AlertDialogDescription>
-										This will delete this node and all of its children.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<AlertDialogCancel>Cancel</AlertDialogCancel>
-									<AlertDialogAction
-										:class="buttonVariants({ variant: 'destructive' })"
-										@click="handleConfirmDelete"
-									>
-										Delete node
-									</AlertDialogAction>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
+								<AlertDialogContent>
+									<AlertDialogHeader>
+										<AlertDialogTitle>Delete this node?</AlertDialogTitle>
+										<AlertDialogDescription>
+											This will delete this node and all of its children.
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter>
+										<AlertDialogCancel>Cancel</AlertDialogCancel>
+										<AlertDialogAction
+											:class="buttonVariants({ variant: 'destructive' })"
+											@click="handleConfirmDelete"
+										>
+											Delete node
+										</AlertDialogAction>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
 						</div>
 					</div>
 				</DrawerFooter>

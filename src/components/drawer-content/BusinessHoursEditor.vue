@@ -7,6 +7,7 @@
 	import { validateTime } from '@/lib/validation'
 	import type { BusinessHourSlot, DayKey } from '@/api/node'
 	import { Save } from 'lucide-vue-next'
+	import { toast } from 'vue-sonner'
 
 	const props = defineProps<{ nodeId: string; saveMetaData: () => void }>()
 
@@ -88,6 +89,8 @@
 			},
 		})
 		props.saveMetaData()
+
+		toast.success('Node details updated')
 	}
 </script>
 
