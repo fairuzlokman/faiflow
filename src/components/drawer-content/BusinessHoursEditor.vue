@@ -1,18 +1,13 @@
 <script setup lang="ts">
 	import { computed, reactive, watch } from 'vue'
 
-	import { Button } from '@/components/ui/button'
 	import { useCanvasStore } from '@/stores/canvas'
-	import { useNodeMutation } from '@/composables/useNodeMutation'
 	import { validateTime } from '@/lib/validation'
-	import type { BusinessHourSlot, DayKey } from '@/api/node'
-	import { Save } from 'lucide-vue-next'
-	import { toast } from 'vue-sonner'
+	import type { BusinessHourSlot, DayKey, NodeData } from '@/api/node'
 
-	const props = defineProps<{ nodeId: string; saveMetaData: () => void }>()
+	const props = defineProps<{ nodeId: string }>()
 
 	const store = useCanvasStore()
-	const { updateNode } = useNodeMutation()
 
 	const DAYS: { key: DayKey; label: string }[] = [
 		{ key: 'mon', label: 'Monday' },
@@ -64,34 +59,31 @@
 	seedFromStored()
 	watch(() => props.nodeId, seedFromStored)
 
-	const handleSaveBusinessHours = () => {
+	function getCommitData(): NodeData | null {
 		const times: BusinessHourSlot[] = []
 		for (const { key } of DAYS) {
 			const state = draft.days[key]
 			if (!state?.enabled) continue
 			if (!validateTime(state.startTime).ok || !validateTime(state.endTime).ok) {
 				draft.error = `Check the time format for ${key}.`
-				return
+				return null
 			}
 			if (state.startTime >= state.endTime) {
 				draft.error = `End time must be after start time for ${key}.`
-				return
+				return null
 			}
 			times.push({ day: key, startTime: state.startTime, endTime: state.endTime })
 		}
 		draft.error = null
-		updateNode(props.nodeId, {
-			data: {
-				times,
-				timezone: draft.timezone || 'UTC',
-				...(stored.value.connectors ? { connectors: stored.value.connectors } : {}),
-				...(stored.value.action ? { action: stored.value.action } : {}),
-			},
-		})
-		props.saveMetaData()
-
-		toast.success('Node details updated')
+		return {
+			times,
+			timezone: draft.timezone || 'UTC',
+			...(stored.value.connectors ? { connectors: stored.value.connectors } : {}),
+			...(stored.value.action ? { action: stored.value.action } : {}),
+		}
 	}
+
+	defineExpose({ getCommitData })
 </script>
 
 <template>
@@ -145,7 +137,5 @@
 		</ul>
 
 		<p v-if="draft.error" class="text-xs text-destructive">{{ draft.error }}</p>
-
-		<Button class="w-full" @click="handleSaveBusinessHours"> <Save />Save changes </Button>
 	</div>
 </template>

@@ -1,16 +1,13 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from 'vue'
 
-	import { Button } from '@/components/ui/button'
 	import { useCanvasStore } from '@/stores/canvas'
-	import { useNodeMutation } from '@/composables/useNodeMutation'
 	import { validateComment } from '@/lib/validation'
-	import { Save } from 'lucide-vue-next'
+	import type { NodeData } from '@/api/node'
 
-	const props = defineProps<{ nodeId: string; saveMetaData: () => void }>()
+	const props = defineProps<{ nodeId: string }>()
 
 	const store = useCanvasStore()
-	const { updateNode } = useNodeMutation()
 
 	const node = computed(() => store.getNode(props.nodeId))
 	const initial = computed(() => {
@@ -26,16 +23,17 @@
 		error.value = null
 	})
 
-	const handleSaveComment = () => {
+	function getCommitData(): NodeData | null {
 		const result = validateComment(draft.value)
 		if (!result.ok) {
 			error.value = result.message
-			return
+			return null
 		}
 		error.value = null
-		updateNode(props.nodeId, { data: { comment: draft.value.trim() } })
-		props.saveMetaData()
+		return { comment: draft.value.trim() }
 	}
+
+	defineExpose({ getCommitData })
 </script>
 
 <template>
@@ -52,6 +50,5 @@
 			@input="error = null"
 		/>
 		<p v-if="error" class="text-xs text-destructive">{{ error }}</p>
-		<Button class="w-full" @click="handleSaveComment"> <Save />Save changes </Button>
 	</div>
 </template>

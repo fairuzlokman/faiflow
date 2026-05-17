@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from 'vue'
-	import { Trash2 } from 'lucide-vue-next'
+	import { Save, Trash2 } from 'lucide-vue-next'
 
 	import {
 		Drawer,
@@ -27,6 +27,8 @@
 	import { useNodeMutation } from '@/composables/useNodeMutation'
 	import { validateDescription, validateTitle } from '@/lib/validation'
 	import { getNodeMeta } from '@/lib/nodeTypes'
+
+	import type { NodeData } from '@/api/node'
 
 	import SendMessageEditor from './SendMessageEditor.vue'
 	import AddCommentEditor from './AddCommentEditor.vue'
@@ -56,7 +58,11 @@
 	const meta = computed(() => (selected.value ? getNodeMeta(selected.value.type) : null))
 	const typeLabel = computed(() => meta.value?.label ?? '')
 
-	const handleSaveMetaData = () => {
+	const sendMessageEditorRef = ref<InstanceType<typeof SendMessageEditor> | null>(null)
+	const addCommentEditorRef = ref<InstanceType<typeof AddCommentEditor> | null>(null)
+	const businessHoursEditorRef = ref<InstanceType<typeof BusinessHoursEditor> | null>(null)
+
+	const handleSaveChanges = () => {
 		if (!selected.value) return
 
 		const titleResult = validateTitle(titleInput.value)
@@ -65,10 +71,27 @@
 		descriptionError.value = descResult.ok ? null : descResult.message
 		if (!titleResult.ok || !descResult.ok) return
 
+		let nodeData: NodeData | undefined
+
+		if (selected.value.type === 'sendMessage') {
+			nodeData = sendMessageEditorRef.value?.getCommitData()
+		} else if (selected.value.type === 'addComment') {
+			const data = addCommentEditorRef.value?.getCommitData()
+			if (data === null) return
+			nodeData = data
+		} else if (selected.value.type === 'dateTime') {
+			const data = businessHoursEditorRef.value?.getCommitData()
+			if (data === null) return
+			nodeData = data
+		}
+
 		updateNode(selected.value.id, {
 			title: titleInput.value.trim(),
 			description: descriptionInput.value.trim(),
+			...(nodeData !== undefined ? { data: nodeData } : {}),
 		})
+
+		toast.success('Node details updated')
 		close()
 	}
 
@@ -138,27 +161,21 @@
 					</section>
 
 					<section v-if="selected.type === 'sendMessage'" class="border-t pt-4">
-						<SendMessageEditor
-							:node-id="selected.id"
-							:save-meta-data="handleSaveMetaData"
-						/>
+						<SendMessageEditor ref="sendMessageEditorRef" :node-id="selected.id" />
 					</section>
 					<section v-else-if="selected.type === 'addComment'" class="border-t pt-4">
-						<AddCommentEditor
-							:node-id="selected.id"
-							:save-meta-data="handleSaveMetaData"
-						/>
+						<AddCommentEditor ref="addCommentEditorRef" :node-id="selected.id" />
 					</section>
 					<section v-else-if="selected.type === 'dateTime'" class="border-t pt-4">
-						<BusinessHoursEditor
-							:node-id="selected.id"
-							:save-meta-data="handleSaveMetaData"
-						/>
+						<BusinessHoursEditor ref="businessHoursEditorRef" :node-id="selected.id" />
 					</section>
 				</div>
 
-				<DrawerFooter>
-					<!-- <Button class="w-full" @click="handleSaveChanges">Save changes</Button> -->
+				<DrawerFooter class="gap-3 border-t">
+					<Button class="w-full" @click="handleSaveChanges">
+						<Save class="size-4" />
+						Save changes
+					</Button>
 					<div class="flex gap-2">
 						<DrawerClose as-child>
 							<Button variant="outline" class="flex-1">Cancel</Button>

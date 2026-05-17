@@ -1,45 +1,47 @@
 <script setup lang="ts">
-	import { computed, ref } from 'vue'
+	import { computed, ref, watch } from 'vue'
 	import { Image, Plus, Trash2, Upload } from 'lucide-vue-next'
 
 	import { Button } from '@/components/ui/button'
 	import { useCanvasStore } from '@/stores/canvas'
-	import { useNodeMutation } from '@/composables/useNodeMutation'
-	import type { MessagePayload } from '@/api/node'
+	import type { MessagePayload, NodeData } from '@/api/node'
 
-	const props = defineProps<{ nodeId: string, saveMetaData: () => void }>()
+	const props = defineProps<{ nodeId: string }>()
 
 	const store = useCanvasStore()
-	const { updateNode } = useNodeMutation()
 
 	const node = computed(() => store.getNode(props.nodeId))
-	const payload = computed<MessagePayload[]>(() => {
+	const storedPayload = computed<MessagePayload[]>(() => {
 		const data = node.value?.data as { payload?: MessagePayload[] } | undefined
 		return data?.payload ?? []
 	})
 
+	const draftPayload = ref<MessagePayload[]>([])
 	const newText = ref('')
 	const fileInput = ref<HTMLInputElement | null>(null)
 
-	const persistPayload = (next: MessagePayload[]) => {
-		updateNode(props.nodeId, { data: { payload: next } })
+	const syncDraftFromStore = () => {
+		draftPayload.value = storedPayload.value.map((item) =>
+			item.type === 'text' ? { ...item } : { ...item },
+		)
 	}
 
+	watch(() => props.nodeId, syncDraftFromStore, { immediate: true })
+
 	const updateText = (index: number, value: string) => {
-		const next = payload.value.map((item, i) =>
+		draftPayload.value = draftPayload.value.map((item, i) =>
 			i === index && item.type === 'text' ? { ...item, text: value } : item,
 		)
-		persistPayload(next)
 	}
 
 	const removeItem = (index: number) => {
-		persistPayload(payload.value.filter((_, i) => i !== index))
+		draftPayload.value = draftPayload.value.filter((_, i) => i !== index)
 	}
 
 	const addText = () => {
 		const trimmed = newText.value.trim()
 		if (!trimmed) return
-		persistPayload([...payload.value, { type: 'text', text: trimmed }])
+		draftPayload.value = [...draftPayload.value, { type: 'text', text: trimmed }]
 		newText.value = ''
 	}
 
@@ -61,11 +63,19 @@
 			)
 		}
 		Promise.all(readers)
-			.then((added) => persistPayload([...payload.value, ...added]))
+			.then((added) => {
+				draftPayload.value = [...draftPayload.value, ...added]
+			})
 			.finally(() => {
 				input.value = ''
 			})
 	}
+
+	function getCommitData(): NodeData {
+		return { payload: draftPayload.value.map((item) => ({ ...item })) }
+	}
+
+	defineExpose({ getCommitData })
 </script>
 
 <template>
@@ -77,7 +87,7 @@
 
 		<ul class="space-y-2">
 			<li
-				v-for="(item, index) in payload"
+				v-for="(item, index) in draftPayload"
 				:key="index"
 				class="flex items-start gap-2 rounded-md border bg-background p-2"
 			>
@@ -114,7 +124,7 @@
 					<Trash2 class="size-3.5 text-destructive" />
 				</Button>
 			</li>
-			<li v-if="payload.length === 0" class="text-xs text-muted-foreground">
+			<li v-if="draftPayload.length === 0" class="text-xs text-muted-foreground">
 				<Image class="mr-1 inline size-3.5" />
 				No content yet.
 			</li>
